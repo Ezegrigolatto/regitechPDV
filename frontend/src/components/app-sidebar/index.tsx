@@ -42,7 +42,8 @@ interface AppSidebarProps {
 export function AppSidebar({ theme }: AppSidebarProps) {
   const [showMinLogo, setShowMinLogo] = useState(false);
 
-  const currentPath = window.location.pathname;
+  const currentPath =
+    window.location.pathname === '/' ? '/ventas' : window.location.pathname;
 
   const { open } = useSidebar();
 

@@ -1,5 +1,5 @@
 import './App.css';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 import AuthGuard from './components/auth-guard';
 import Layout from './components/layout';
 import Login from './pages/login';
@@ -14,7 +14,12 @@ function App() {
       children: [
         {
           path: '/',
-          element: <Layout />,
+          element: (
+            <>
+              <Layout />
+              <Navigate to="/ventas" replace />,
+            </>
+          ),
           children: [
             {
               path: '/ventas',

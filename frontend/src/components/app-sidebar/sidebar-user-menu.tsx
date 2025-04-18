@@ -19,6 +19,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
+import supabase from '../../../supabase-config';
+
 export function SidebarUserMenu({
   user,
 }: {
@@ -29,6 +31,10 @@ export function SidebarUserMenu({
   };
 }) {
   const { isMobile } = useSidebar();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <SidebarMenu>
@@ -78,9 +84,9 @@ export function SidebarUserMenu({
                 <UserCircleIcon />
                 Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
                 <LogOutIcon />
-                Log out
+                Cerrar sesion
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

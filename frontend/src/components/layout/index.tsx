@@ -1,20 +1,26 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { SidebarProvider } from '../ui/sidebar';
 import { AppSidebar } from '../app-sidebar';
 import { SiteHeader } from '../site-header';
+import { useThemeStore } from '@/stores/theme.store';
+import { useEffect } from 'react';
 
 const Layout: React.FC = () => {
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('theme') || 'light') as 'light' | 'dark';
+  const { theme, setTheme } = useThemeStore();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
     }
-    return 'light' as 'light' | 'dark';
-  });
+  }, [theme]);
 
   return (
     <SidebarProvider defaultOpen>
-      <AppSidebar theme={theme} />
+      <AppSidebar />
       <main className="w-full">
         <SiteHeader theme={theme} setTheme={setTheme} />
         <Outlet />

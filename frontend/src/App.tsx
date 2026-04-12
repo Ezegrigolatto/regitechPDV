@@ -5,6 +5,7 @@ import Layout from './components/layout';
 import Login from './pages/login';
 import Ventas from './pages/ventas';
 import Notas from './pages/notas';
+import Stock from './pages/stock';
 
 function App() {
   const router = createBrowserRouter([
@@ -28,6 +29,10 @@ function App() {
             {
               path: '/notas',
               element: <Notas />,
+            },
+            {
+              path: '/stock',
+              element: <Stock />,
             },
           ],
         },

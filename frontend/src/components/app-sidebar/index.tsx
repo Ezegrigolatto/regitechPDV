@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { SidebarUserMenu } from './sidebar-user-menu';
 import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useThemeStore } from '@/stores/theme.store';
 
 const SidebarItems = [
   { title: 'Ventas', url: '/ventas', icon: ReceiptText },
@@ -35,24 +37,17 @@ const SidebarItems = [
   { title: 'Notas', url: '/notas', icon: NotebookPen },
 ];
 
-interface AppSidebarProps {
-  theme: 'light' | 'dark';
-}
-
-export function AppSidebar({ theme }: AppSidebarProps) {
+export function AppSidebar() {
   const [showMinLogo, setShowMinLogo] = useState(false);
-
-  const currentPath =
-    window.location.pathname === '/' ? '/ventas' : window.location.pathname;
-
   const { open } = useSidebar();
+  const location = useLocation();
+  const { theme } = useThemeStore();
 
-  //handle logo change on sidebar open/close to prevent flickering
+  const currentPath = location.pathname === '/' ? '/ventas' : location.pathname;
+
   useEffect(() => {
     if (!open) {
-      setTimeout(() => {
-        setShowMinLogo(true);
-      }, 180);
+      setTimeout(() => setShowMinLogo(true), 180);
     } else {
       setShowMinLogo(false);
     }
@@ -63,13 +58,13 @@ export function AppSidebar({ theme }: AppSidebarProps) {
       <SidebarHeader>
         <img
           className="w-full flex"
-          src={`${
+          src={
             showMinLogo
               ? './assets/logo-min.png'
               : theme === 'dark'
               ? './assets/logo-white.png'
               : './assets/logo.png'
-          }`}
+          }
           alt="app-logo"
         />
       </SidebarHeader>
@@ -87,10 +82,10 @@ export function AppSidebar({ theme }: AppSidebarProps) {
                         : ''
                     }
                   >
-                    <a href={item.url}>
+                    <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -102,20 +97,14 @@ export function AppSidebar({ theme }: AppSidebarProps) {
         <SidebarMenu className="mb-4">
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="/configuracion">
+              <Link to="/configuracion">
                 <Settings />
                 <span>Configuracion</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarUserMenu
-              user={{
-                name: 'Zeki',
-                email: 'ezegrigolatto@gmail.com',
-                avatar: './assets/avatar.png',
-              }}
-            />
+            <SidebarUserMenu />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

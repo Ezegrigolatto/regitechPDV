@@ -1,7 +1,8 @@
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Moon, Sun } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface SiteHeaderProps {
   theme: 'light' | 'dark';
@@ -9,21 +10,19 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ theme, setTheme }: SiteHeaderProps) {
-  const currentPath = useMemo(() => {
-    const path = window.location.pathname;
-    return path.startsWith('/') ? path.slice(1) : path;
-  }, []);
+  const location = useLocation();
+
+  const currentPath = location.pathname.startsWith('/')
+    ? location.pathname.slice(1)
+    : location.pathname;
 
   useEffect(() => {
     const root = window.document.documentElement;
-
     if (theme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
-
-    // Guardamos en localStorage para mantener el tema entre sesiones
     localStorage.setItem('theme', theme);
   }, [theme]);
 
@@ -44,12 +43,12 @@ export function SiteHeader({ theme, setTheme }: SiteHeaderProps) {
       <div className="flex items-center justify-center pr-6">
         {theme === 'dark' ? (
           <Moon
-            className={`h-5 w-5 transition-colors group-data-[theme=dark]:text-primary cursor-pointer `}
+            className="h-5 w-5 transition-colors cursor-pointer"
             onClick={toggleTheme}
           />
         ) : (
           <Sun
-            className={`h-5 w-5 transition-colors group-data-[theme=light]:text-primary cursor-pointer`}
+            className="h-5 w-5 transition-colors cursor-pointer"
             onClick={toggleTheme}
           />
         )}

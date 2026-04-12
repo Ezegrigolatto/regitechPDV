@@ -1,45 +1,72 @@
 import { Outlet, useNavigate } from 'react-router-dom';
+import supabase from '../../../supabase-config';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/stores/auth.store';
 
 interface AuthGuardProps {
   children?: React.ReactNode;
 }
-import supabase from '../../../supabase-config';
-import { useEffect } from 'react';
 
 const AuthGuard = ({ children }: AuthGuardProps) => {
   const navigate = useNavigate();
+  const { setUser, setProfile, setIsLoading, clear, isLoading } = useAuthStore();
 
   useEffect(() => {
+    // Verificar sesión inicial
     supabase.auth
       .getSession()
-      .then(({ data: { session } }) => {
+      .then(async ({ data: { session } }) => {
         if (!session?.user) {
+          clear();
           navigate('/login');
         } else {
-          const path = window.location.pathname;
-          if (path === '/login') {
+          setUser(session.user);
+
+          // Cargar perfil desde la tabla profiles
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          setProfile(profile ?? null);
+
+          if (window.location.pathname === '/login') {
             navigate('/');
           }
         }
+        setIsLoading(false);
       })
-      .catch((error) => {
-        console.error('Error fetching session:', error);
+      .catch(() => {
+        clear();
         navigate('/login');
+        setIsLoading(false);
       });
+
+    // Escuchar cambios de sesión
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session?.user) {
+        clear();
         navigate('/login');
       } else {
-        const path = window.location.pathname;
-        if (path === '/login') {
-          navigate('/');
-        }
+        setUser(session.user);
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        setProfile(profile ?? null);
       }
     });
+
     return () => subscription.unsubscribe();
   }, []);
+
+  if (isLoading) return null;
 
   return children ? children : <Outlet />;
 };

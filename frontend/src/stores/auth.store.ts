@@ -8,6 +8,7 @@ interface Profile {
   role: 'admin' | 'cajero' | 'vendedor';
   branch_id: string | null;
   is_active: boolean;
+  theme: 'light' | 'dark';
 }
 
 interface AuthStore {

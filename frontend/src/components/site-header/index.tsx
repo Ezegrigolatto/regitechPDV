@@ -1,8 +1,11 @@
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, LockOpen, Lock } from 'lucide-react';
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/stores/auth.store';
+import { useOpenCashSession } from '@/hooks/use-cash-sessions';
+import { Button } from '../ui/button';
 
 interface SiteHeaderProps {
   theme: 'light' | 'dark';
@@ -11,6 +14,12 @@ interface SiteHeaderProps {
 
 export function SiteHeader({ theme, setTheme }: SiteHeaderProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { profile } = useAuthStore();
+  const branchId = profile?.branch_id ?? '';
+
+  const { data: currentSession } = useOpenCashSession(branchId);
+  const isOpen = !!currentSession;
 
   const currentPath = location.pathname.startsWith('/')
     ? location.pathname.slice(1)
@@ -40,7 +49,31 @@ export function SiteHeader({ theme, setTheme }: SiteHeaderProps) {
         />
         <h1 className="text-base font-medium capitalize">{currentPath}</h1>
       </div>
-      <div className="flex items-center justify-center pr-6">
+      <div className="flex items-center gap-3 pr-6">
+        {/* Hint de caja */}
+        {branchId && (
+          <Button
+            onClick={() => navigate('/caja')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+              isOpen
+                ? 'bg-green-500/10 text-green-700 hover:bg-green-500/20'
+                : 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+            }`}
+          >
+            {isOpen ? (
+              <>
+                <LockOpen className="h-3 w-3" />
+                Caja abierta
+              </>
+            ) : (
+              <>
+                <Lock className="h-3 w-3" />
+                Caja cerrada
+              </>
+            )}
+          </Button>
+        )}
+
         {theme === 'dark' ? (
           <Moon
             className="h-5 w-5 transition-colors cursor-pointer"

@@ -3,11 +3,17 @@ import { Button } from '@/components/ui/button';
 import { TicketTabs } from '@/components/ventas/ticket-tabs';
 import { ProductSearch } from '@/components/ventas/product-search';
 import { CheckoutDialog } from '@/components/ventas/checkout-dialog';
+import { CustomerSelector } from '@/components/clientes/customer-selector';
 import { useVentasStore } from '@/stores/ventas.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCloseTicket, usePaymentMethods } from '@/hooks/use-sale-orders';
 import { useBranchStock } from '@/hooks/use-stock';
 import { toast } from 'sonner';
+import { PostCheckoutDialog } from '@/components/ventas/post-checkout-dialog';
+import type { SaleOrder } from '@/services/sale-orders.service';
+import { useOpenCashSession } from '@/hooks/use-cash-sessions';
+import { useNavigate } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -26,9 +32,13 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import type { Customer } from '@/services/customers.service';
 
 const Ventas = () => {
   const { profile } = useAuthStore();
+  const navigate = useNavigate();
+const { data: currentSession } = useOpenCashSession(profile?.branch_id ?? '');
+const isCajaOpen = !!currentSession;
   const {
     tickets,
     activeTicketId,
@@ -38,6 +48,7 @@ const Ventas = () => {
     decrementItem,
     removeItem,
     setDiscount,
+    setCustomer,
     clearTicket,
   } = useVentasStore();
 
@@ -50,9 +61,19 @@ const Ventas = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [discountValue, setDiscountValue] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [completedOrder, setCompletedOrder] = useState<SaleOrder | null>(null);
+  const [postCheckoutOpen, setPostCheckoutOpen] = useState(false);
 
   const { data: paymentMethods = [] } = usePaymentMethods();
   const closeTicket = useCloseTicket();
+
+  const handleSelectCustomer = (customer: Customer | null) => {
+    setSelectedCustomer(customer);
+    if (activeTicketId) {
+      setCustomer(activeTicketId, customer?.id ?? null);
+    }
+  };
 
   const handleApplyDiscount = () => {
     if (!activeTicketId || !discountValue) return;
@@ -65,15 +86,20 @@ const Ventas = () => {
     setDiscountValue('');
   };
 
+  const handlePostCheckoutClose = () => {
+    setPostCheckoutOpen(false);
+    if (activeTicket) {
+      clearTicket(activeTicket.id);
+    }
+    setDiscountValue('');
+    setSelectedCustomer(null);
+    setCompletedOrder(null);
+  };
+
   const handleConfirmCheckout = async (
     orderType: 'sale' | 'remito' | 'presupuesto',
     payments: { payment_method_id: string; amount: number; reference?: string }[]
   ) => {
-    const supabase = (await import('../../../supabase-config')).default;
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
     if (!activeTicket) return;
 
     try {
@@ -104,28 +130,16 @@ const Ventas = () => {
         ticketId = created.id;
       }
 
-      await closeTicket.mutateAsync({
+      const result = await closeTicket.mutateAsync({
         ticket_id: ticketId,
         order_type: orderType,
         payments,
       });
 
-      clearTicket(activeTicket.id);
+      // Guardamos la orden completada y abrimos el dialog post-checkout
+      setCompletedOrder(result.sale_order);
       setCheckoutOpen(false);
-      setDiscountValue('');
-
-      const label =
-        orderType === 'sale'
-          ? 'Factura'
-          : orderType === 'remito'
-          ? 'Remito'
-          : 'Presupuesto';
-
-      toast.success(`${label} generado correctamente`, {
-        description: `Total: $${activeTicket.total.toLocaleString('es-AR', {
-          minimumFractionDigits: 2,
-        })}`,
-      });
+      setPostCheckoutOpen(true);
     } catch (err: any) {
       console.error('Error al cerrar ticket:', err);
       toast.error('Error al procesar el cobro', {
@@ -134,7 +148,23 @@ const Ventas = () => {
     }
   };
 
-  // Sin tickets abiertos
+  if (!isCajaOpen) {
+  return (
+    <div className="w-full px-6 flex flex-col items-center justify-center min-h-[70vh] gap-4">
+      <div className="p-6 bg-destructive/10 rounded-full">
+        <Lock className="h-12 w-12 text-destructive" />
+      </div>
+      <h2 className="text-xl font-bold">La caja está cerrada</h2>
+      <p className="text-muted-foreground text-sm text-center max-w-xs">
+        Abrí la caja antes de comenzar a vender.
+      </p>
+      <Button size="lg" onClick={() => navigate('/caja')}>
+        Ir a abrir caja
+      </Button>
+    </div>
+  );
+}
+
   if (tickets.length === 0) {
     return (
       <div className="w-full px-6 flex flex-col items-center justify-center min-h-[70vh] gap-4">
@@ -156,110 +186,125 @@ const Ventas = () => {
   }
 
   return (
-    <div className="w-full px-6 py-6 flex flex-col gap-4">
+    <div className="w-full px-6 py-6 flex flex-col gap-4 h-[calc(100vh-4rem)] justify-start">
       {/* Tabs */}
       <TicketTabs />
 
-      {/* Contenido del ticket activo */}
       {activeTicket && (
-        <div className="flex flex-col gap-4">
-          {/* Búsqueda */}
-          <ProductSearch />
+        <div className="flex flex-col gap-4 justify-between h-full">
+          <div>
+            {/* Búsqueda + Cliente */}
+            <div className="flex gap-3 items-center">
+              <div className="flex-1">
+                <ProductSearch />
+              </div>
+              <div className="w-72">
+                <CustomerSelector
+                  selectedCustomer={selectedCustomer}
+                  onSelect={handleSelectCustomer}
+                />
+              </div>
+            </div>
 
-          {/* Tabla de items */}
-          <div className="border rounded-2xl overflow-auto max-h-[45vh]">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-background">
-                <TableRow>
-                  <TableHead className="w-[100px] text-center">Código</TableHead>
-                  <TableHead>Artículo</TableHead>
-                  <TableHead className="text-center">Precio</TableHead>
-                  <TableHead className="text-center">Cantidad</TableHead>
-                  <TableHead className="text-center">Importe</TableHead>
-                  <TableHead className="text-center">Stock</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {activeTicket.items.length === 0 && (
+            {/* Tabla de items */}
+            <div className="border rounded-2xl overflow-auto max-h-[45vh] mt-4">
+              <Table>
+                <TableHeader className="sticky top-0 z-10 bg-background">
                   <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-12 text-muted-foreground"
-                    >
-                      Buscá un producto para agregarlo al ticket
-                    </TableCell>
+                    <TableHead className="w-[100px] text-center">Código</TableHead>
+                    <TableHead>Artículo</TableHead>
+                    <TableHead className="text-center">Precio</TableHead>
+                    <TableHead className="text-center">Cantidad</TableHead>
+                    <TableHead className="text-center">Importe</TableHead>
+                    <TableHead className="text-center">Stock</TableHead>
+                    <TableHead />
                   </TableRow>
-                )}
-                {activeTicket.items.map((item) => (
-                  <TableRow key={item.product_id} className="h-14">
-                    <TableCell className="text-center font-mono text-xs text-muted-foreground">
-                      {item.sku ?? '—'}
-                    </TableCell>
-                    <TableCell className="font-semibold max-w-[200px] truncate">
-                      {item.name}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      $
-                      {item.unit_price.toLocaleString('es-AR', {
-                        minimumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-3">
-                        <MinusCircle
-                          className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors h-5 w-5"
-                          onClick={() => decrementItem(activeTicket.id, item.product_id)}
-                        />
-                        <span className="font-bold w-6 text-center">{item.quantity}</span>
-                        <PlusCircle
-                          className={`h-5 w-5 transition-colors ${
-                            item.quantity >= getStock(item.product_id)
-                              ? 'text-muted-foreground/30 cursor-not-allowed'
-                              : 'cursor-pointer text-muted-foreground hover:text-foreground'
-                          }`}
-                          onClick={() => {
-                            if (item.quantity >= getStock(item.product_id)) return;
-                            incrementItem(activeTicket.id, item.product_id);
-                          }}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center font-bold">
-                      $
-                      {item.subtotal.toLocaleString('es-AR', {
-                        minimumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {(() => {
-                        const stock = getStock(item.product_id);
-                        const isLow = stock <= item.quantity;
-                        return (
-                          <span
-                            className={
-                              isLow
-                                ? 'text-destructive font-bold'
-                                : 'text-muted-foreground'
+                </TableHeader>
+                <TableBody>
+                  {activeTicket.items.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-12 text-muted-foreground"
+                      >
+                        Buscá un producto para agregarlo al ticket
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {activeTicket.items.map((item) => (
+                    <TableRow key={item.product_id} className="h-14">
+                      <TableCell className="text-center font-mono text-xs text-muted-foreground">
+                        {item.sku ?? '—'}
+                      </TableCell>
+                      <TableCell className="font-semibold max-w-[200px] truncate">
+                        {item.name}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        $
+                        {item.unit_price.toLocaleString('es-AR', {
+                          minimumFractionDigits: 2,
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-3">
+                          <MinusCircle
+                            className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors h-5 w-5"
+                            onClick={() =>
+                              decrementItem(activeTicket.id, item.product_id)
                             }
-                          >
-                            {stock}
+                          />
+                          <span className="font-bold w-6 text-center">
+                            {item.quantity}
                           </span>
-                        );
-                      })()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-center">
-                        <Trash2
-                          className="h-4 w-4 text-destructive cursor-pointer hover:opacity-70 transition-opacity"
-                          onClick={() => removeItem(activeTicket.id, item.product_id)}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                          <PlusCircle
+                            className={`h-5 w-5 transition-colors ${
+                              item.quantity >= getStock(item.product_id)
+                                ? 'text-muted-foreground/30 cursor-not-allowed'
+                                : 'cursor-pointer text-muted-foreground hover:text-foreground'
+                            }`}
+                            onClick={() => {
+                              if (item.quantity >= getStock(item.product_id)) return;
+                              incrementItem(activeTicket.id, item.product_id);
+                            }}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center font-bold">
+                        $
+                        {item.subtotal.toLocaleString('es-AR', {
+                          minimumFractionDigits: 2,
+                        })}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {(() => {
+                          const stock = getStock(item.product_id);
+                          const isLow = stock <= item.quantity;
+                          return (
+                            <span
+                              className={
+                                isLow
+                                  ? 'text-destructive font-bold'
+                                  : 'text-muted-foreground'
+                              }
+                            >
+                              {stock}
+                            </span>
+                          );
+                        })()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-center">
+                          <Trash2
+                            className="h-4 w-4 text-destructive cursor-pointer hover:opacity-70 transition-opacity"
+                            onClick={() => removeItem(activeTicket.id, item.product_id)}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Footer del ticket */}
@@ -358,20 +403,37 @@ const Ventas = () => {
                 </div>
               </div>
 
-              <Button
-                size="lg"
-                className="h-14 px-8 text-base font-bold"
-                disabled={activeTicket.items.length === 0 || closeTicket.isPending}
-                onClick={() => setCheckoutOpen(true)}
-              >
-                {closeTicket.isPending ? 'Procesando...' : 'Cobrar'}
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                {!selectedCustomer && activeTicket.items.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Seleccioná un cliente para cobrar
+                  </p>
+                )}
+                <Button
+                  size="lg"
+                  className="h-14 px-8 text-base font-bold"
+                  disabled={
+                    activeTicket.items.length === 0 ||
+                    closeTicket.isPending ||
+                    !selectedCustomer
+                  }
+                  onClick={() => setCheckoutOpen(true)}
+                >
+                  {closeTicket.isPending ? 'Procesando...' : 'Cobrar'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Checkout dialog */}
+      <PostCheckoutDialog
+        open={postCheckoutOpen}
+        onClose={handlePostCheckoutClose}
+        order={completedOrder}
+        branchName={profile?.branch_id ?? 'Casa Central'}
+      />
+
       {activeTicket && (
         <CheckoutDialog
           open={checkoutOpen}
@@ -380,6 +442,7 @@ const Ventas = () => {
           ticket={activeTicket}
           paymentMethods={paymentMethods}
           isLoading={closeTicket.isPending}
+          customer={selectedCustomer}
         />
       )}
     </div>

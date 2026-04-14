@@ -39,6 +39,8 @@ interface ProductTableProps {
   filterCategory: string;
   onFilterCategory: (val: string) => void;
   filterSearch: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 const PAGE_SIZE = 10;
@@ -52,6 +54,8 @@ export function ProductTable({
   filterCategory,
   onFilterCategory,
   filterSearch,
+  canEdit,
+  canDelete,
 }: ProductTableProps) {
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -204,22 +208,26 @@ export function ProductTable({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                          onClick={() => onEdit(product)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeleteId(product.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canEdit && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                            onClick={() => onEdit(product)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => setDeleteId(product.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

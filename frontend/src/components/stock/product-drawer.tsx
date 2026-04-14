@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -27,6 +22,7 @@ interface ProductDrawerProps {
   categories: Category[];
   currentStock?: number;
   isLoading?: boolean;
+  canEditStock?: boolean;
 }
 
 const EMPTY_FORM = {
@@ -50,6 +46,7 @@ export function ProductDrawer({
   categories,
   currentStock = 0,
   isLoading,
+  canEditStock
 }: ProductDrawerProps) {
   const [form, setForm] = useState(EMPTY_FORM);
   const isEditing = !!product;
@@ -96,7 +93,8 @@ export function ProductDrawer({
 
   const stockValue = parseFloat(form.current_stock) || 0;
   const stockMin = parseFloat(form.stock_min) || 0;
-  const stockPercent = stockMin > 0 ? Math.min((stockValue / (stockMin * 3)) * 100, 100) : 50;
+  const stockPercent =
+    stockMin > 0 ? Math.min((stockValue / (stockMin * 3)) * 100, 100) : 50;
   const isLow = stockValue <= stockMin;
 
   return (
@@ -121,7 +119,6 @@ export function ProductDrawer({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
-
           {/* — Información general — */}
           <div>
             <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-4">
@@ -211,7 +208,9 @@ export function ProductDrawer({
                     Precio minorista *
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      $
+                    </span>
                     <Input
                       className="pl-7"
                       type="number"
@@ -226,7 +225,9 @@ export function ProductDrawer({
                     Precio mayorista
                   </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      $
+                    </span>
                     <Input
                       className="pl-7"
                       type="number"
@@ -243,7 +244,9 @@ export function ProductDrawer({
                   Precio de costo
                 </Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                    $
+                  </span>
                   <Input
                     className="pl-7"
                     type="number"
@@ -269,12 +272,18 @@ export function ProductDrawer({
                   <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                     Stock actual
                   </Label>
-                  <Input
-                    type="number"
-                    value={form.current_stock}
-                    onChange={(e) => handleChange('current_stock', e.target.value)}
-                    placeholder="0"
-                  />
+                  {canEditStock ? (
+                    <Input
+                      type="number"
+                      value={form.current_stock}
+                      onChange={(e) => handleChange('current_stock', e.target.value)}
+                      placeholder="0"
+                    />
+                  ) : (
+                    <p className="text-sm font-semibold px-3 py-2 bg-muted/50 rounded-lg">
+                      {form.current_stock || '0'}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -293,7 +302,11 @@ export function ProductDrawer({
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Nivel de stock</span>
-                  <span className={`text-xs font-bold ${isLow ? 'text-destructive' : 'text-primary'}`}>
+                  <span
+                    className={`text-xs font-bold ${
+                      isLow ? 'text-destructive' : 'text-primary'
+                    }`}
+                  >
                     {stockValue} unidades {isLow ? '— Crítico' : ''}
                   </span>
                 </div>
@@ -323,7 +336,11 @@ export function ProductDrawer({
             onClick={handleSubmit}
             disabled={isLoading || !form.name || !form.category_id}
           >
-            {isLoading ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Crear Artículo'}
+            {isLoading
+              ? 'Guardando...'
+              : isEditing
+              ? 'Guardar Cambios'
+              : 'Crear Artículo'}
           </Button>
         </div>
       </SheetContent>

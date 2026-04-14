@@ -3,11 +3,16 @@ import supabase from '../../supabase-config';
 export interface Supplier {
   id: string;
   name: string;
+  razon_social: string | null;
   contact_name: string | null;
   email: string | null;
   phone: string | null;
+  phone_2: string | null;
   address: string | null;
   tax_id: string | null;
+  website: string | null;
+  notes: string | null;
+  image_url: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -166,6 +171,19 @@ export async function deactivateSupplier(id: string) {
   const { data, error } = await supabase
     .from('suppliers')
     .update({ is_active: false })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// Activar proveedor
+export async function activateSupplier(id: string) {
+  const { data, error } = await supabase
+    .from('suppliers')
+    .update({ is_active: true })
     .eq('id', id)
     .select()
     .single();

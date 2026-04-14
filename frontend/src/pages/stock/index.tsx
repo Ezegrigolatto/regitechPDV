@@ -20,12 +20,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { productKeys } from '@/hooks/use-products';
 import * as XLSX from 'xlsx';
 import supabase from '../../../supabase-config';
+import { usePermissions } from '@/hooks/use-permissions';
 
 export default function Stock() {
   const { profile } = useAuthStore();
   const branchId = profile?.branch_id ?? '';
 
   const queryClient = useQueryClient();
+  const { can } = usePermissions();
 
   // Queries
   const { data: products = [], isLoading: loadingProducts } = useProducts({
@@ -174,7 +176,7 @@ export default function Stock() {
   const isLoading = loadingProducts || loadingCategories;
 
   return (
-    <div className="w-full px-8 py-8 min-h-screen">
+    <div className="w-full px-8 py-8 min-h-[calc(100vh-64px)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -218,16 +220,20 @@ export default function Stock() {
           </div>
 
           {/* Categorías */}
-          <Button variant="outline" onClick={() => setCategoryDialogOpen(true)}>
-            <Tag className="h-4 w-4 mr-2" />
-            Categorías
-          </Button>
+          {can('products', 'manageCategories') && (
+            <Button variant="outline" onClick={() => setCategoryDialogOpen(true)}>
+              <Tag className="h-4 w-4 mr-2" />
+              Categorías
+            </Button>
+          )}
 
           {/* Nuevo producto */}
-          <Button onClick={handleOpenCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Artículo
-          </Button>
+          {can('products', 'create') && (
+            <Button onClick={handleOpenCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Artículo
+            </Button>
+          )}
         </div>
       </div>
 
@@ -253,6 +259,8 @@ export default function Stock() {
           filterCategory={filterCategory}
           onFilterCategory={setFilterCategory}
           filterSearch={search}
+          canEdit={can('products', 'edit')}
+          canDelete={can('products', 'delete')}
         />
       )}
 
@@ -272,6 +280,7 @@ export default function Stock() {
             : 0
         }
         isLoading={createProduct.isPending || updateProduct.isPending}
+        canEditStock={can('stock', 'manualAdjustment')}
       />
 
       {/* Dialog categorías */}

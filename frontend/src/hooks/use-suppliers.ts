@@ -7,6 +7,7 @@ import {
   createSupplier,
   updateSupplier,
   deactivateSupplier,
+  activateSupplier,
   createPurchaseOrder,
   updatePurchaseOrder,
   type SupplierFilters,
@@ -80,6 +81,16 @@ export function useDeactivateSupplier() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deactivateSupplier,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: supplierKeys.lists() });
+    },
+  });
+}
+
+export function useActivateSupplier() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: activateSupplier,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supplierKeys.lists() });
     },

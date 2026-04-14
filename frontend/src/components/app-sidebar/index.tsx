@@ -13,9 +13,9 @@ import {
 import {
   ChartNoAxesCombined,
   Archive,
-  Package,
   UsersRound,
   Settings,
+  CircleDollarSign,
   ReceiptText,
   Truck,
   ClipboardList,
@@ -29,12 +29,12 @@ import { useThemeStore } from '@/stores/theme.store';
 const SidebarItems = [
   { title: 'Ventas', url: '/ventas', icon: ReceiptText },
   { title: 'Stock', url: '/stock', icon: Archive },
-  { title: 'Tickets', url: '/tickets', icon: Package },
   { title: 'Reportes', url: '/reportes', icon: ChartNoAxesCombined },
   { title: 'Clientes', url: '/clientes', icon: UsersRound },
   { title: 'Proveedores', url: '/proveedores', icon: Truck },
   { title: 'Ordenes', url: '/ordenes', icon: ClipboardList },
   { title: 'Notas', url: '/notas', icon: NotebookPen },
+  { title: 'Caja', url: '/caja', icon: CircleDollarSign },
 ];
 
 export function AppSidebar() {

@@ -15,15 +15,29 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useThemeStore } from '@/stores/theme.store';
+import { useCajaStore } from '@/stores/caja.store';
+import { toast } from 'sonner';
+
 import supabase from '../../../supabase-config';
 import { useAuthStore } from '@/stores/auth.store';
+import { Link } from 'react-router-dom';
 
 export function SidebarUserMenu() {
   const { isMobile } = useSidebar();
   const { profile, clear } = useAuthStore();
+  const { currentSession } = useCajaStore();
+  const { setTheme } = useThemeStore();
 
   const handleLogout = async () => {
+    if (currentSession?.status === 'open') {
+      toast.error('No podés cerrar sesión con la caja abierta', {
+        description: 'Cerrá la caja antes de salir.',
+      });
+      return;
+    }
     await supabase.auth.signOut();
+    setTheme('light');
     clear();
   };
 
@@ -90,13 +104,15 @@ export function SidebarUserMenu() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer">
-                <UserCircleIcon />
-                Perfil
-              </DropdownMenuItem>
+              <Link to="/configuracion" className="w-full">
+                <DropdownMenuItem className="cursor-pointer">
+                  <UserCircleIcon />
+                  Perfil
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
                 <LogOutIcon />
-                Cerrar sesion
+                Cerrar sesión
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

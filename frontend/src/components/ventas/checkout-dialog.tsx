@@ -11,9 +11,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, User } from 'lucide-react';
 import type { LocalTicket } from '@/stores/ventas.store';
 import type { PaymentMethod } from '@/services/sale-orders.service';
+import type { Customer } from '@/services/customers.service';
 
 interface PaymentEntry {
   payment_method_id: string;
@@ -31,6 +32,7 @@ interface CheckoutDialogProps {
   ticket: LocalTicket;
   paymentMethods: PaymentMethod[];
   isLoading?: boolean;
+  customer: Customer | null;
 }
 
 export function CheckoutDialog({
@@ -40,6 +42,7 @@ export function CheckoutDialog({
   ticket,
   paymentMethods,
   isLoading,
+  customer,
 }: CheckoutDialogProps) {
   const [orderType, setOrderType] = useState<'sale' | 'remito' | 'presupuesto'>('sale');
   const [payments, setPayments] = useState<PaymentEntry[]>([
@@ -90,6 +93,21 @@ export function CheckoutDialog({
         <DialogHeader>
           <DialogTitle className="text-2xl font-extrabold">Cobrar</DialogTitle>
         </DialogHeader>
+
+        {/* Cliente */}
+        {customer && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg">
+            <User className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{customer.full_name}</p>
+              {customer.tax_id && (
+                <p className="text-[11px] text-muted-foreground font-mono">
+                  {customer.tax_id}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Resumen del ticket */}
         <div className="bg-muted/50 rounded-xl p-4 space-y-2">
@@ -153,7 +171,7 @@ export function CheckoutDialog({
           </div>
         </div>
 
-        {/* Pagos — solo si no es presupuesto */}
+        {/* Pagos */}
         {orderType !== 'presupuesto' && (
           <div className="space-y-3">
             <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
@@ -223,7 +241,6 @@ export function CheckoutDialog({
               </Button>
             )}
 
-            {/* Diferencia */}
             {totalPagado > 0 && (
               <div
                 className={`flex justify-between text-sm font-bold rounded-lg px-3 py-2 ${

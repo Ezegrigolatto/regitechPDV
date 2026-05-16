@@ -101,8 +101,8 @@ export function OrderDrawer({
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           {order.type === 'presupuesto' && (
             <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-3 text-sm text-yellow-700 font-medium">
-              Este presupuesto es un snapshot de precios al momento de su creación. No
-              mueve stock.
+              Este presupuesto toma el valor del/los producto/s al momento de su creación. No
+              genera movimiento de stock ni es una venta.
             </div>
           )}
           {order.type === 'remito' && (

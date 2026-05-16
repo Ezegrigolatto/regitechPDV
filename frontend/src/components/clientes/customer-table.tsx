@@ -105,36 +105,39 @@ export function CustomerTable({
                     {customer.is_active ? 'Activo' : 'Inactivo'}
                   </span>
                 </TableCell>
-                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
-                    onClick={() => onView(customer)}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  {canEdit && (
+
+                <TableCell>
+                  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={() => onEdit(customer)}
+                      className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                      onClick={() => onView(customer)}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </Button>
-                  )}
-                  {canDeactivate && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => onDelete(customer)}
-                    >
-                      <UserX className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                    {canEdit && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={() => onEdit(customer)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {canDeactivate && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => onDelete(customer)}
+                      >
+                        <UserX className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

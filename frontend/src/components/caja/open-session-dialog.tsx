@@ -1,9 +1,16 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
+import { TimePicker } from '../ui/time-picker';
 
 interface OpenSessionDialogProps {
   open: boolean;
@@ -25,7 +32,7 @@ export function OpenSessionDialog({
   const handleConfirm = () => {
     onConfirm(
       parseFloat(openingAmount) || 0,
-      useReminder && reminderTime ? reminderTime : null
+      useReminder && reminderTime ? reminderTime.slice(0, 5) : null
     );
   };
 
@@ -46,7 +53,9 @@ export function OpenSessionDialog({
               Monto inicial en efectivo
             </Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                $
+              </span>
               <Input
                 className="pl-7 text-lg font-bold"
                 type="number"
@@ -72,17 +81,17 @@ export function OpenSessionDialog({
                 onClick={() => setUseReminder(!useReminder)}
                 disabled={isLoading}
               >
-                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                  useReminder ? 'translate-x-5' : 'translate-x-1'
-                }`} />
+                <span
+                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                    useReminder ? 'translate-x-5' : 'translate-x-1'
+                  }`}
+                />
               </button>
             </div>
             {useReminder && (
-              <Input
-                type="time"
-                value={reminderTime}
-                onChange={(e) => setReminderTime(e.target.value)}
-                disabled={isLoading}
+              <TimePicker
+                defaultValue="21:00:00"
+                onChange={(time) => setReminderTime(time.slice(0, 5))}
               />
             )}
             <p className="text-xs text-muted-foreground">
@@ -94,7 +103,12 @@ export function OpenSessionDialog({
         </div>
 
         <div className="flex gap-3 mt-4">
-          <Button variant="outline" className="flex-1" onClick={onClose} disabled={isLoading}>
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={onClose}
+            disabled={isLoading}
+          >
             Cancelar
           </Button>
           <Button className="flex-1" onClick={handleConfirm} disabled={isLoading}>

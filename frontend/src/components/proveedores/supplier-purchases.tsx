@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { format } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -10,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -408,10 +410,11 @@ export function SupplierPurchases({ supplierId }: SupplierPurchasesProps) {
                   <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                     Fecha *
                   </Label>
-                  <Input
-                    type="date"
-                    value={form.date}
-                    onChange={(e) => setForm((p) => ({ ...p, date: e.target.value }))}
+                  <DatePicker
+                    mode="popover"
+                    className="w-full"
+                    value={new Date(form.date + 'T00:00:00')}
+                    onDateChange={(date) => setForm((p) => ({ ...p, date: format(date, 'yyyy-MM-dd') }))}
                     disabled={formState === 'loading'}
                   />
                 </div>

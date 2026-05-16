@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Calendar } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
 import type { DateRange } from '@/services/reports.service';
 
 export type Preset =
@@ -80,13 +80,9 @@ export function DateRangeSelector({ onChange }: DateRangeSelectorProps) {
 
   const handleCustomApply = () => {
     if (!customFrom || !customTo) return;
-    onChange(
-      {
-        from: new Date(customFrom).toISOString(),
-        to: new Date(customTo + 'T23:59:59').toISOString(),
-      },
-      'custom'
-    );
+    const fromDate = new Date(customFrom + 'T00:00:00');
+    const toDate = new Date(customTo + 'T23:59:59');
+    onChange({ from: fromDate.toISOString(), to: toDate.toISOString() }, 'custom');
   };
 
   return (
@@ -109,25 +105,19 @@ export function DateRangeSelector({ onChange }: DateRangeSelectorProps) {
 
       {activePreset === 'custom' && (
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              className="pl-9 w-44"
-              type="date"
-              value={customFrom}
-              onChange={(e) => setCustomFrom(e.target.value)}
-            />
-          </div>
+          <DatePicker
+            mode="popover"
+            placeholder="Fecha desde"
+            value={customFrom ? new Date(customFrom + 'T00:00:00') : undefined}
+            onDateChange={(date) => setCustomFrom(format(date, 'yyyy-MM-dd'))}
+          />
           <span className="text-muted-foreground text-sm">hasta</span>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              className="pl-9 w-44"
-              type="date"
-              value={customTo}
-              onChange={(e) => setCustomTo(e.target.value)}
-            />
-          </div>
+          <DatePicker
+            mode="popover"
+            placeholder="Fecha hasta"
+            value={customTo ? new Date(customTo + 'T00:00:00') : undefined}
+            onDateChange={(date) => setCustomTo(format(date, 'yyyy-MM-dd'))}
+          />
           <Button
             size="sm"
             onClick={handleCustomApply}

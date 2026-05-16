@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,7 @@ import { useSaleOrders, saleOrderKeys } from '@/hooks/use-sale-orders';
 import { useAuthStore } from '@/stores/auth.store';
 import { createDevolution } from '@/services/devolutions.service';
 import { toast } from 'sonner';
-import { Search, Calendar, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { Search, RotateCcw, CheckCircle2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -173,25 +175,19 @@ export default function Ordenes() {
           </SelectContent>
         </Select>
 
-        <div className="relative">
-          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <Input
-            className="pl-9 w-44"
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
-        </div>
+        <DatePicker
+          mode="popover"
+          placeholder="Fecha desde"
+          value={dateFrom ? new Date(dateFrom + 'T00:00:00') : undefined}
+          onDateChange={(date) => setDateFrom(format(date, 'yyyy-MM-dd'))}
+        />
 
-        <div className="relative">
-          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <Input
-            className="pl-9 w-44"
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
-        </div>
+        <DatePicker
+          mode="popover"
+          placeholder="Fecha hasta"
+          value={dateTo ? new Date(dateTo + 'T00:00:00') : undefined}
+          onDateChange={(date) => setDateTo(format(date, 'yyyy-MM-dd'))}
+        />
 
         {(search || statusFilter !== 'all' || dateFrom || dateTo) && (
           <Button

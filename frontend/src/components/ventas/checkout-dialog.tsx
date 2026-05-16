@@ -52,8 +52,11 @@ export function CheckoutDialog({
   const totalPagado = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
   const diferencia = totalPagado - ticket.total;
   const isValid =
-    payments.every((p) => p.payment_method_id && parseFloat(p.amount) > 0) &&
-    (orderType === 'presupuesto' || Math.abs(diferencia) < 0.01);
+    orderType === 'presupuesto' ||
+    (payments.every((p) => p.payment_method_id && parseFloat(p.amount) > 0) &&
+      Math.abs(diferencia) < 0.01);
+
+  console.log(diferencia);
 
   const addPayment = () => {
     setPayments((prev) => [

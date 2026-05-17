@@ -28,5 +28,5 @@ export const useAuthStore = create<AuthStore>()((set) => ({
   setUser: (user) => set({ user }),
   setProfile: (profile) => set({ profile }),
   setIsLoading: (isLoading) => set({ isLoading }),
-  clear: () => set({ user: null, profile: null }),
+  clear: () => set({ user: null, profile: null, isLoading: false }),
 }));

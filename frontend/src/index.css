@@ -118,3 +118,45 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* MainLoader morph animations — each square starts at a different corner and orbits clockwise */
+@keyframes morph-0 {
+  0%,100% { transform: translate(-44px,-44px) scale(1);    border-radius: 6px;  }
+  12.5%   { transform: translate(0px,-44px)   scale(0.75); border-radius: 30%;  }
+  25%     { transform: translate(44px,-44px)  scale(1);    border-radius: 50%;  }
+  37.5%   { transform: translate(44px,0px)    scale(0.75); border-radius: 30%;  }
+  50%     { transform: translate(44px,44px)   scale(1);    border-radius: 6px;  }
+  62.5%   { transform: translate(0px,44px)    scale(0.75); border-radius: 30%;  }
+  75%     { transform: translate(-44px,44px)  scale(1);    border-radius: 50%;  }
+  87.5%   { transform: translate(-44px,0px)   scale(0.75); border-radius: 30%;  }
+}
+@keyframes morph-1 {
+  0%,100% { transform: translate(44px,-44px)  scale(1);    border-radius: 50%;  }
+  12.5%   { transform: translate(44px,0px)    scale(0.75); border-radius: 30%;  }
+  25%     { transform: translate(44px,44px)   scale(1);    border-radius: 6px;  }
+  37.5%   { transform: translate(0px,44px)    scale(0.75); border-radius: 30%;  }
+  50%     { transform: translate(-44px,44px)  scale(1);    border-radius: 50%;  }
+  62.5%   { transform: translate(-44px,0px)   scale(0.75); border-radius: 30%;  }
+  75%     { transform: translate(-44px,-44px) scale(1);    border-radius: 6px;  }
+  87.5%   { transform: translate(0px,-44px)   scale(0.75); border-radius: 30%;  }
+}
+@keyframes morph-2 {
+  0%,100% { transform: translate(44px,44px)   scale(1);    border-radius: 6px;  }
+  12.5%   { transform: translate(0px,44px)    scale(0.75); border-radius: 30%;  }
+  25%     { transform: translate(-44px,44px)  scale(1);    border-radius: 50%;  }
+  37.5%   { transform: translate(-44px,0px)   scale(0.75); border-radius: 30%;  }
+  50%     { transform: translate(-44px,-44px) scale(1);    border-radius: 6px;  }
+  62.5%   { transform: translate(0px,-44px)   scale(0.75); border-radius: 30%;  }
+  75%     { transform: translate(44px,-44px)  scale(1);    border-radius: 50%;  }
+  87.5%   { transform: translate(44px,0px)    scale(0.75); border-radius: 30%;  }
+}
+@keyframes morph-3 {
+  0%,100% { transform: translate(-44px,44px)  scale(1);    border-radius: 50%;  }
+  12.5%   { transform: translate(-44px,0px)   scale(0.75); border-radius: 30%;  }
+  25%     { transform: translate(-44px,-44px) scale(1);    border-radius: 6px;  }
+  37.5%   { transform: translate(0px,-44px)   scale(0.75); border-radius: 30%;  }
+  50%     { transform: translate(44px,-44px)  scale(1);    border-radius: 50%;  }
+  62.5%   { transform: translate(44px,0px)    scale(0.75); border-radius: 30%;  }
+  75%     { transform: translate(44px,44px)   scale(1);    border-radius: 6px;  }
+  87.5%   { transform: translate(0px,44px)    scale(0.75); border-radius: 30%;  }
+}

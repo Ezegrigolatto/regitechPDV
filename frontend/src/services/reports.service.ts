@@ -26,10 +26,16 @@ export async function getSalesStats(branchId: string, range: DateRange, category
 
   let filteredOrders = orders ?? [];
 
-  // Filtrar por categoría si se especifica
+  // Filtrar por categoría: los items solo tienen product_id, hay que resolver por productos
   if (categoryId) {
+    const { data: catProducts } = await supabase
+      .from('products')
+      .select('id')
+      .eq('category_id', categoryId);
+
+    const productIds = new Set((catProducts ?? []).map((p) => p.id));
     filteredOrders = filteredOrders.filter((o) =>
-      (o.items as any[]).some((item) => item.category_id === categoryId)
+      (o.items as any[]).some((item) => productIds.has(item.product_id))
     );
   }
 

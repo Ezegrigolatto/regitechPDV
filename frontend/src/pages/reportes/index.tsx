@@ -101,7 +101,9 @@ export default function Reportes() {
       {activeSection === 'customers' && (
         <CustomersSection branchId={branchId} range={range} />
       )}
-      {activeSection === 'stock' && <StockSection branchId={branchId} />}
+      {activeSection === 'stock' && (
+        <StockSection branchId={branchId} />
+      )}
     </div>
   );
 }

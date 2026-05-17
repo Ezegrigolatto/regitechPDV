@@ -14,13 +14,14 @@ import {
   useDeactivateProduct,
 } from '@/hooks/use-products';
 import { stockKeys, useBranchStock, useLowStock } from '@/hooks/use-stock';
-import { Plus, Tag, Download, Search } from 'lucide-react';
+import { Plus, Tag, Download, Search, Upload } from 'lucide-react';
 import type { Product } from '@/services/products.service';
 import { useQueryClient } from '@tanstack/react-query';
 import { productKeys } from '@/hooks/use-products';
 import * as XLSX from 'xlsx';
 import supabase from '../../../supabase-config';
 import { usePermissions } from '@/hooks/use-permissions';
+import { ImportProductsDialog } from '@/components/stock/import-products-dialog';
 
 export default function Stock() {
   const { profile } = useAuthStore();
@@ -47,6 +48,7 @@ export default function Stock() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   // Handlers — Producto
@@ -227,6 +229,14 @@ export default function Stock() {
             </Button>
           )}
 
+          {/* Importar */}
+          {can('products', 'create') && (
+            <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Importar
+            </Button>
+          )}
+
           {/* Nuevo producto */}
           {can('products', 'create') && (
             <Button onClick={handleOpenCreate}>
@@ -281,6 +291,17 @@ export default function Stock() {
         }
         isLoading={createProduct.isPending || updateProduct.isPending}
         canEditStock={can('stock', 'manualAdjustment')}
+      />
+
+      {/* Dialog importar */}
+      <ImportProductsDialog
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        branchId={branchId}
+        onImported={() => {
+          queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+          queryClient.invalidateQueries({ queryKey: stockKeys.byBranch(branchId) });
+        }}
       />
 
       {/* Dialog categorías */}

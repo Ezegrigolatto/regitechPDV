@@ -16,18 +16,18 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { Package, DollarSign, AlertTriangle, Tag } from 'lucide-react';
+import { Package, DollarSign, AlertTriangle, Layers } from 'lucide-react';
 import { useChartTheme } from '@/hooks/use-chart-theme';
 
-const COLORS = [
-  '#ff7a21',
-  '#984200',
-  '#febb28',
-  '#ee6e11',
-  '#863900',
-  '#694a00',
-  '#ffc69c',
-  '#ffb378',
+const CATEGORY_COLORS = [
+  '#06b6d4', // cyan
+  '#8b5cf6', // violet
+  '#10b981', // emerald
+  '#f59e0b', // amber
+  '#6366f1', // indigo
+  '#ec4899', // pink
+  '#ef4444', // red
+  '#84cc16', // lime
 ];
 
 function formatCurrency(value: number) {
@@ -47,7 +47,7 @@ export function StockSection({ branchId }: StockSectionProps) {
     enabled: !!branchId,
   });
 
-  if (isLoading) {
+  if (!stats && isLoading) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
         Cargando stock...
@@ -59,16 +59,13 @@ export function StockSection({ branchId }: StockSectionProps) {
 
   const stockEvolution = (() => {
     if (!stats.movements.length) return [];
-
     const byDay: Record<string, number> = {};
     let cumulative = 0;
-
     stats.movements.forEach((mov) => {
       const day = mov.created_at.slice(0, 10);
       cumulative += mov.quantity;
       byDay[day] = cumulative;
     });
-
     return Object.entries(byDay)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, units]) => ({
@@ -108,30 +105,34 @@ export function StockSection({ branchId }: StockSectionProps) {
           title="Productos distintos"
           value={stats.totalProducts.toString()}
           icon={Package}
-          iconColor="text-primary"
-          iconBg="bg-primary/10"
+          iconColor="text-indigo-600"
+          iconBg="bg-indigo-500/10"
+          accentColor="#6366f1"
         />
         <KpiCard
           title="Unidades totales"
           value={stats.totalUnits.toLocaleString('es-AR')}
-          icon={Tag}
-          iconColor="text-blue-600"
-          iconBg="bg-blue-500/10"
+          icon={Layers}
+          iconColor="text-cyan-600"
+          iconBg="bg-cyan-500/10"
+          accentColor="#06b6d4"
         />
         <KpiCard
           title="Valor del inventario"
           value={formatCurrency(stats.totalValue)}
           icon={DollarSign}
-          iconColor="text-green-600"
-          iconBg="bg-green-500/10"
+          iconColor="text-emerald-600"
+          iconBg="bg-emerald-500/10"
+          accentColor="#10b981"
           subtitle="A precio de costo"
         />
         <KpiCard
           title="Bajo stock mínimo"
           value={stats.lowStock.toString()}
           icon={AlertTriangle}
-          iconColor="text-destructive"
-          iconBg="bg-destructive/10"
+          iconColor="text-red-600"
+          iconBg="bg-red-500/10"
+          accentColor="#ef4444"
           subtitle="Requieren reposición"
         />
       </div>
@@ -139,29 +140,19 @@ export function StockSection({ branchId }: StockSectionProps) {
       {/* Evolución del stock */}
       {stockEvolution.length > 0 && (
         <div className="bg-card border rounded-2xl p-6">
-          <h3 className="font-bold mb-2">Evolución del stock en unidades</h3>
-          <p className="text-xs text-muted-foreground mb-6">
-            Basado en movimientos registrados
-          </p>
+          <h3 className="font-bold mb-1">Evolución del stock en unidades</h3>
+          <p className="text-xs text-muted-foreground mb-6">Basado en movimientos registrados</p>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={stockEvolution}>
               <defs>
-                <linearGradient id="colorUnidades" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ff7a21" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#ff7a21" stopOpacity={0} />
+                <linearGradient id="stockAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#10b981" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={chart.gridColor} />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11, fill: chart.axisColor }}
-                stroke={chart.axisColor}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: chart.axisColor }}
-                stroke={chart.axisColor}
-                allowDecimals={false}
-              />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: chart.axisColor }} stroke={chart.axisColor} />
+              <YAxis tick={{ fontSize: 11, fill: chart.axisColor }} stroke={chart.axisColor} allowDecimals={false} />
               <Tooltip
                 formatter={(value) => [(value as number) || 0, 'Unidades en stock']}
                 contentStyle={tooltipStyle}
@@ -169,11 +160,11 @@ export function StockSection({ branchId }: StockSectionProps) {
               <Area
                 type="monotone"
                 dataKey="unidades"
-                stroke="#ff7a21"
+                stroke="#10b981"
                 strokeWidth={2.5}
-                fill="url(#colorUnidades)"
+                fill="url(#stockAreaGradient)"
                 dot={false}
-                activeDot={{ r: 5 }}
+                activeDot={{ r: 5, fill: '#10b981' }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -181,22 +172,15 @@ export function StockSection({ branchId }: StockSectionProps) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Unidades por categoría */}
+        {/* Unidades por categoría — barras multi-color */}
         {categoryUnitsData.length > 0 && (
           <div className="bg-card border rounded-2xl p-6">
-            <h3 className="font-bold mb-6">Unidades por categoría</h3>
+            <h3 className="font-bold mb-1">Unidades por categoría</h3>
+            <p className="text-xs text-muted-foreground mb-6">Cantidad de ítems en inventario</p>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={categoryUnitsData} layout="vertical">
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={chart.gridColor}
-                  horizontal={false}
-                />
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 11, fill: chart.axisColor }}
-                  stroke={chart.axisColor}
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.gridColor} horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: chart.axisColor }} stroke={chart.axisColor} />
                 <YAxis
                   type="category"
                   dataKey="name"
@@ -208,7 +192,11 @@ export function StockSection({ branchId }: StockSectionProps) {
                   formatter={(value) => [(value as number) || 0, 'Unidades']}
                   contentStyle={tooltipStyle}
                 />
-                <Bar dataKey="unidades" fill="#ff7a21" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="unidades" radius={[0, 6, 6, 0]}>
+                  {categoryUnitsData.map((_, i) => (
+                    <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -217,7 +205,8 @@ export function StockSection({ branchId }: StockSectionProps) {
         {/* Valor por categoría */}
         {categoryValueData.length > 0 && (
           <div className="bg-card border rounded-2xl p-6">
-            <h3 className="font-bold mb-6">Valor del inventario por categoría</h3>
+            <h3 className="font-bold mb-1">Valor del inventario por categoría</h3>
+            <p className="text-xs text-muted-foreground mb-6">Valorización a precio de costo</p>
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
@@ -229,8 +218,8 @@ export function StockSection({ branchId }: StockSectionProps) {
                   paddingAngle={3}
                   dataKey="value"
                 >
-                  {categoryValueData.map((_, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  {categoryValueData.map((_, i) => (
+                    <Cell key={i} fill={CATEGORY_COLORS[i % CATEGORY_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip
@@ -239,9 +228,7 @@ export function StockSection({ branchId }: StockSectionProps) {
                 />
                 <Legend
                   formatter={(value) => (
-                    <span style={{ fontSize: '11px', color: chart.axisColor }}>
-                      {value}
-                    </span>
+                    <span style={{ fontSize: '11px', color: chart.axisColor }}>{value}</span>
                   )}
                 />
               </PieChart>
@@ -250,29 +237,37 @@ export function StockSection({ branchId }: StockSectionProps) {
         )}
       </div>
 
-      {/* Tabla de categorías */}
+      {/* Barras de progreso por categoría */}
       {stats.byCategory.length > 0 && (
         <div className="bg-card border rounded-2xl p-6">
-          <h3 className="font-bold mb-6">Detalle por categoría</h3>
-          <div className="space-y-3">
-            {stats.byCategory.map((cat, index) => {
+          <h3 className="font-bold mb-1">Detalle por categoría</h3>
+          <p className="text-xs text-muted-foreground mb-6">Proporción del valor de inventario</p>
+          <div className="space-y-4">
+            {stats.byCategory.map((cat, i) => {
               const maxValue = stats.byCategory[0].value;
               const pct = maxValue > 0 ? (cat.value / maxValue) * 100 : 0;
+              const color = CATEGORY_COLORS[i % CATEGORY_COLORS.length];
               return (
-                <div key={index} className="space-y-1">
+                <div key={i} className="space-y-1.5">
                   <div className="flex justify-between text-sm">
-                    <span className="font-semibold">{cat.name}</span>
-                    <div className="flex gap-4 text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="font-semibold">{cat.name}</span>
+                    </div>
+                    <div className="flex gap-5 text-muted-foreground">
                       <span>{cat.units.toLocaleString('es-AR')} u</span>
-                      <span className="font-bold text-foreground">
+                      <span className="font-bold text-foreground w-24 text-right">
                         {formatCurrency(cat.value)}
                       </span>
                     </div>
                   </div>
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-primary rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%`, backgroundColor: color }}
                     />
                   </div>
                 </div>

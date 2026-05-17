@@ -26,7 +26,8 @@ import { Users, UserPlus, Repeat } from 'lucide-react';
 import type { DateRange } from '@/services/reports.service';
 import { useChartTheme } from '@/hooks/use-chart-theme';
 
-const COLORS = ['#ff7a21', '#984200', '#febb28', '#ee6e11', '#863900'];
+const RECURRENCE_COLORS = ['#8b5cf6', '#06b6d4'];   // violet nuevos, cyan recurrentes
+const TOP_COLORS = ['#8b5cf6', '#6366f1', '#3b82f6', '#06b6d4', '#10b981'];
 
 function formatCurrency(value: number) {
   return `$${value.toLocaleString('es-AR', { minimumFractionDigits: 0 })}`;
@@ -46,7 +47,7 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
     enabled: !!branchId,
   });
 
-  if (isLoading) {
+  if (!stats && isLoading) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
         Cargando clientes...
@@ -67,7 +68,7 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
     }));
 
   const recurrenceData = [
-    { name: 'Nuevos', value: stats.newCustomers },
+    { name: 'Nuevos',      value: stats.newCustomers },
     { name: 'Recurrentes', value: stats.recurringCustomers },
   ].filter((d) => d.value > 0);
 
@@ -82,9 +83,7 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
     <div className="space-y-8">
       <div>
         <h2 className="text-lg font-extrabold mb-1">Clientes</h2>
-        <p className="text-sm text-muted-foreground">
-          Análisis de clientes en el período
-        </p>
+        <p className="text-sm text-muted-foreground">Análisis de clientes en el período</p>
       </div>
 
       {/* KPIs */}
@@ -93,22 +92,25 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
           title="Clientes nuevos"
           value={stats.newCustomers.toString()}
           icon={UserPlus}
-          iconColor="text-green-600"
-          iconBg="bg-green-500/10"
+          iconColor="text-violet-600"
+          iconBg="bg-violet-500/10"
+          accentColor="#8b5cf6"
         />
         <KpiCard
           title="Clientes recurrentes"
           value={stats.recurringCustomers.toString()}
           icon={Repeat}
-          iconColor="text-blue-600"
-          iconBg="bg-blue-500/10"
+          iconColor="text-cyan-600"
+          iconBg="bg-cyan-500/10"
+          accentColor="#06b6d4"
         />
         <KpiCard
           title="Total activos"
           value={(stats.newCustomers + stats.recurringCustomers).toString()}
           icon={Users}
-          iconColor="text-primary"
-          iconBg="bg-primary/10"
+          iconColor="text-indigo-600"
+          iconBg="bg-indigo-500/10"
+          accentColor="#6366f1"
         />
       </div>
 
@@ -116,7 +118,8 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
         {/* Clientes nuevos por día */}
         {newByDayData.length > 0 && (
           <div className="bg-card border rounded-2xl p-6">
-            <h3 className="font-bold mb-6">Clientes nuevos por día</h3>
+            <h3 className="font-bold mb-1">Clientes nuevos por día</h3>
+            <p className="text-xs text-muted-foreground mb-6">Alta de clientes en el período</p>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={newByDayData}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chart.gridColor} />
@@ -134,7 +137,7 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
                   formatter={(value) => [(value as number) || 0, 'Clientes nuevos']}
                   contentStyle={tooltipStyle}
                 />
-                <Bar dataKey="count" fill="#ff7a21" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -143,7 +146,8 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
         {/* Nuevos vs recurrentes */}
         {recurrenceData.length > 0 && (
           <div className="bg-card border rounded-2xl p-6">
-            <h3 className="font-bold mb-6">Nuevos vs recurrentes</h3>
+            <h3 className="font-bold mb-1">Nuevos vs recurrentes</h3>
+            <p className="text-xs text-muted-foreground mb-6">Composición de clientes activos</p>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
@@ -155,8 +159,8 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
                   paddingAngle={3}
                   dataKey="value"
                 >
-                  {recurrenceData.map((_, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  {recurrenceData.map((_, i) => (
+                    <Cell key={i} fill={RECURRENCE_COLORS[i % RECURRENCE_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip
@@ -165,9 +169,7 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
                 />
                 <Legend
                   formatter={(value) => (
-                    <span style={{ fontSize: '12px', color: chart.axisColor }}>
-                      {value}
-                    </span>
+                    <span style={{ fontSize: '12px', color: chart.axisColor }}>{value}</span>
                   )}
                 />
               </PieChart>
@@ -179,48 +181,32 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
       {/* Top 5 clientes */}
       {stats.topCustomers.length > 0 && (
         <div className="bg-card border rounded-2xl p-6">
-          <h3 className="font-bold mb-6">Top 5 clientes por compras</h3>
+          <h3 className="font-bold mb-1">Top 5 clientes por compras</h3>
+          <p className="text-xs text-muted-foreground mb-6">Clientes con mayor volumen en el período</p>
           <div className="bg-muted/30 rounded-xl overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-                    #
-                  </TableHead>
-                  <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-                    Cliente
-                  </TableHead>
-                  <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-center">
-                    Órdenes
-                  </TableHead>
-                  <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-right">
-                    Total comprado
-                  </TableHead>
+                  <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest w-12">#</TableHead>
+                  <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Cliente</TableHead>
+                  <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-center">Órdenes</TableHead>
+                  <TableHead className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-right">Total comprado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {stats.topCustomers.map((customer, index) => (
-                  <TableRow key={index} className="h-12">
+                {stats.topCustomers.map((customer, i) => (
+                  <TableRow key={i} className="h-12">
                     <TableCell>
-                      <span
-                        className={`text-sm font-extrabold ${
-                          index === 0
-                            ? 'text-yellow-500'
-                            : index === 1
-                            ? 'text-slate-400'
-                            : index === 2
-                            ? 'text-amber-600'
-                            : 'text-muted-foreground'
-                        }`}
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white"
+                        style={{ backgroundColor: TOP_COLORS[i] ?? '#6366f1' }}
                       >
-                        #{index + 1}
-                      </span>
+                        {i + 1}
+                      </div>
                     </TableCell>
                     <TableCell className="font-semibold">{customer.name}</TableCell>
                     <TableCell className="text-center">{customer.orders}</TableCell>
-                    <TableCell className="text-right font-bold">
-                      {formatCurrency(customer.total)}
-                    </TableCell>
+                    <TableCell className="text-right font-bold">{formatCurrency(customer.total)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -228,7 +214,13 @@ export function CustomersSection({ branchId, range }: CustomersSectionProps) {
           </div>
         </div>
       )}
+
+      {stats.newCustomers === 0 && stats.recurringCustomers === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+          <Users className="h-12 w-12 opacity-20" />
+          <p className="font-medium">Sin actividad de clientes en el período</p>
+        </div>
+      )}
     </div>
   );
 }
-  
